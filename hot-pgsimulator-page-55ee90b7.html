@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>pg模拟器 · 信息查询与对照工具</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f8f6f1; /* 米白基调 */
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #1e2a36;
+            line-height: 1.65;
+            padding: 2rem 1.5rem 4rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page {
+            max-width: 880px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* 文章排版核心 */
+        .card-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .info-card {
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 0 0 1px rgba(0, 0, 0, 0.02);
+            padding: 2rem 1.8rem;
+            transition: box-shadow 0.15s ease;
+        }
+
+        .info-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.04);
+        }
+
+        /* 主视觉区域 —— 更安静、阅读感 */
+        .hero-section {
+            margin-bottom: 0.5rem;
+            text-align: left;
+        }
+
+        .hero-section h1 {
+            font-size: 2.2rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            color: #1e2a36;
+            margin-bottom: 0.6rem;
+            line-height: 1.2;
+        }
+
+        .hero-section .subhead {
+            font-size: 1.1rem;
+            color: #3f4b57;
+            border-left: 4px solid #b7ab9e;
+            padding-left: 1.2rem;
+            margin: 1rem 0 1.2rem 0;
+            font-weight: 380;
+        }
+
+        .hero-section p {
+            color: #2c3a45;
+            margin-top: 0.2rem;
+        }
+
+        .divider-light {
+            height: 1px;
+            background: linear-gradient(90deg, #e1dbd2, transparent);
+            margin: 1.6rem 0 2rem;
+            width: 100%;
+        }
+
+        /* 引用块 / 提示框 */
+        .inset-quote {
+            background: #f3f0ea;
+            border-radius: 14px;
+            padding: 1.2rem 1.6rem;
+            margin: 1.8rem 0 1rem;
+            font-size: 0.98rem;
+            color: #2f3b47;
+            border-left: 0;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+            position: relative;
+        }
+
+        .inset-quote::before {
+            content: "📌";
+            margin-right: 0.5rem;
+            opacity: 0.7;
+        }
+
+        .inset-quote strong {
+            font-weight: 550;
+            color: #1e2a36;
+        }
+
+        .tip-block {
+            background: #eae7e0;
+            border-radius: 12px;
+            padding: 1.2rem 1.6rem;
+            margin: 1.6rem 0 0.8rem;
+            font-size: 0.95rem;
+            color: #23303b;
+            display: flex;
+            gap: 0.6rem;
+            align-items: flex-start;
+        }
+
+        .tip-block .tip-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        /* 卡片内部标题 */
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            margin-bottom: 1.2rem;
+            color: #1e2a36;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title .decor {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #b7ab9e;
+            border-radius: 50%;
+            margin-right: 0.35rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.9rem 1.5rem;
+        }
+
+        .feature-list li {
+            padding: 0.3rem 0 0.3rem 1.6rem;
+            position: relative;
+            font-size: 0.98rem;
+            color: #25323e;
+        }
+
+        .feature-list li::before {
+            content: "·";
+            position: absolute;
+            left: 0.3rem;
+            color: #6d7a86;
+            font-weight: 700;
+            font-size: 1.3rem;
+            line-height: 1;
+        }
+
+        .audience-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem 0.8rem;
+            margin: 0.5rem 0 0.2rem;
+        }
+
+        .audience-tag {
+            background: #efebe5;
+            padding: 0.25rem 1rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            color: #25323e;
+            letter-spacing: 0.01em;
+        }
+
+        .link-sentence {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 1.4rem 1.8rem;
+            margin: 1.8rem 0 0.5rem;
+            border: 1px solid #e5dfd7;
+            font-size: 1rem;
+        }
+
+        .link-sentence a {
+            color: #1e2a36;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            text-decoration-color: #b7ab9e;
+            text-decoration-thickness: 1.5px;
+            font-weight: 500;
+            transition: color 0.1s, text-decoration-color 0.1s;
+        }
+
+        .link-sentence a:hover {
+            color: #000;
+            text-decoration-color: #1e2a36;
+        }
+
+        .faq-summary {
+            margin-top: 0.8rem;
+        }
+
+        .faq-item {
+            padding: 0.8rem 0;
+            border-bottom: 1px dashed #ddd6cc;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-q {
+            font-weight: 500;
+            color: #1e2a36;
+            margin-bottom: 0.3rem;
+        }
+
+        .faq-a {
+            font-size: 0.93rem;
+            color: #3f4b57;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #e1dbd2;
+            margin: 2.5rem 0 1.5rem;
+        }
+
+        .footer-note {
+            font-size: 0.85rem;
+            color: #6e7c89;
+            text-align: left;
+            letter-spacing: 0.02em;
+            border-top: 1px solid #e1dbd2;
+            padding-top: 1.8rem;
+            margin-top: 2.2rem;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1.2rem 1rem 3rem;
+            }
+
+            .info-card {
+                padding: 1.6rem 1.2rem;
+            }
+
+            .hero-section h1 {
+                font-size: 1.8rem;
+            }
+
+            .feature-list {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .card-title {
+                font-size: 1.2rem;
+            }
+
+            .link-sentence {
+                padding: 1rem 1.2rem;
+            }
+
+            .inset-quote, .tip-block {
+                padding: 1rem 1.2rem;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .two-col {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="card-grid">
+
+        <!-- 主视觉 hero -->
+        <section class="info-card hero-section">
+            <h1>pg模拟器 · 查询与对照</h1>
+            <div class="subhead">日常参数检索 · 场景延伸阅读 · 快速索引</div>
+            <p>面向需要频繁查对配置、观察概率或测试策略的用户，<a href="https://hot-pgsimulator.com" style="text-decoration:underline; text-underline-offset:3px; text-decoration-color:#b7ab9e; text-decoration-thickness:1.5px; font-weight:500; color:#1e2a36;">pg模拟器</a> 提供一套轻量、结构化的信息组织方式，聚焦于查询效率与对比清晰度。</p>
+            <div class="inset-quote">
+                <strong>使用建议：</strong> 将模拟器作为日常对照的起点，配合文档或笔记进行交叉验证，尤其适合参数敏感型场景。
+            </div>
+        </section>
+
+        <!-- 用途卡片：信息密度较高 -->
+        <section class="info-card">
+            <div class="card-title"><span class="decor"></span>用途 · 检索与对照</div>
+            <p style="margin-bottom: 1.2rem;">借助分类索引与即时过滤，可快速锁定目标范围。典型查询方向包括：</p>
+            <ul class="feature-list">
+                <li>概率对照与区间预览</li>
+                <li>配置参数条目检索</li>
+                <li>模拟结果横向比较</li>
+                <li>常见组合快速筛选</li>
+                <li>阈值与边界值定位</li>
+                <li>历史记录回溯参考</li>
+            </ul>
+            <div class="tip-block">
+                <span class="tip-icon">⚡</span>
+                <span>如需延伸查阅原始数据或详细公式，可将 <a href="https://hot-pgsimulator.com" style="text-decoration:underline; text-underline-offset:2px; text-decoration-color:#b7ab9e; font-weight:500; color:#1e2a36;">pg模拟器</a> 内生成的对照表导出或截取，作为外部笔记的附件。</span>
+            </div>
+        </section>
+
+        <!-- 适合人群卡片 + 自然链接 -->
+        <section class="info-card">
+            <div class="card-title"><span class="decor"></span>适合人群</div>
+            <p style="margin-bottom: 0.8rem;">无论你是日常使用者、文档维护者还是策略设计者，以下场景均可能与该工具产生交集：</p>
+            <div class="audience-tags">
+                <span class="audience-tag">参数查询者</span>
+                <span class="audience-tag">对比分析者</span>
+                <span class="audience-tag">策略记录者</span>
+                <span class="audience-tag">测试与校验</span>
+                <span class="audience-tag">延伸阅读</span>
+            </div>
+            <p style="margin-top: 1.4rem;">使用 <a href="https://hot-pgsimulator.com" style="text-decoration:underline; text-underline-offset:3px; text-decoration-color:#b7ab9e; font-weight:500; color:#1e2a36;">pg模拟器</a> 进行模拟或对照时，建议同时打开相关文档或计算器，形成“模拟 → 查询 → 记录”的闭环。</p>
+        </section>
+
+        <!-- 引用 / 提示块 自然过渡 -->
+        <div class="two-col">
+            <div class="info-card" style="margin-bottom:0;">
+                <div class="card-title" style="font-size:1.1rem;"><span class="decor"></span>日常查询场景</div>
+                <ul style="list-style:none; padding:0;">
+                    <li style="padding:0.4rem 0; border-bottom:1px solid #f0eae3;">• 快速定位参数范围</li>
+                    <li style="padding:0.4rem 0; border-bottom:1px solid #f0eae3;">• 多组数值横向对比</li>
+                    <li style="padding:0.4rem 0; border-bottom:1px solid #f0eae3;">• 边界条件下的输出</li>
+                    <li style="padding:0.4rem 0;">• 结果存档与回溯</li>
+                </ul>
+            </div>
+            <div class="info-card" style="margin-bottom:0;">
+                <div class="card-title" style="font-size:1.1rem;"><span class="decor"></span>延伸阅读线索</div>
+                <p style="font-size:0.95rem;">结合外部资料使用时，可将 <a href="https://hot-pgsimulator.com" style="text-decoration:underline; text-underline-offset:2px; text-decoration-color:#b7ab9e; font-weight:500; color:#1e2a36;">pg模拟器</a> 的索引作为目录，快速跳转到感兴趣的章节或参数组，减少反复翻查的时间。</p>
+            </div>
+        </div>
+
+        <!-- FAQ 摘要卡片 -->
+        <section class="info-card">
+            <div class="card-title"><span class="decor"></span>常见问题摘要</div>
+            <div class="faq-summary">
+                <div class="faq-item">
+                    <div class="faq-q">模拟结果可以导出为文本吗？</div>
+                    <div class="faq-a">页面内置复制与截取功能，当前展示的对照表可直接选中复制，适合粘贴到笔记或表格中。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">参数范围是否覆盖极端值？</div>
+                    <div class="faq-a">默认展示常用区间，部分边界值可通过自定义输入或调整滑块获得，具体视模块而定。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">能否同时打开多个对比窗口？</div>
+                    <div class="faq-a">支持多标签页操作，每个独立标签均可运行各自的模拟会话，互不干扰。</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 自然链接段落，再次出现 pg模拟器 -->
+        <div class="link-sentence">
+            <span style="display:block; margin-bottom:0.6rem;">🔍 信息密度整理</span>
+            如果你正在寻找一个结构清晰的参考工具，<a href="https://hot-pgsimulator.com">pg模拟器</a> 的卡片式索引和即时对照方式，可以减少信息检索中的噪音，尤其适合需要反复查对参数或模拟结果的日常流程。
+        </div>
+
+        <hr>
+
+        <div class="footer-note">
+            本页为信息介绍页 · 内容基于通用查询与对照场景编写 · 不构成任何形式的承诺或保证。
+        </div>
+    </div>
+</div>
+</body>
+</html>
